@@ -1,0 +1,915 @@
+import React, { useState, useMemo } from 'react';
+
+// --- Mock Data (Projects Only) ---
+// Participants are now added by the user.
+const initialProjects = [
+    {
+        id: '1',
+        title: 'AI-Powered Code Review Assistant',
+        description: 'An intelligent tool that automatically reviews pull requests and suggests improvements using machine learning. Aims to help developers write better code by providing instant, actionable feedback on code quality, security vulnerabilities, and best practices.',
+        tags: ['Python', 'TensorFlow', 'React', 'Node.js', 'Hard'],
+        members: 3,
+        maxMembers: 5,
+        team: [
+            { name: 'Alex Chen', initials: 'AC', role: 'Project Owner' },
+            { name: 'Sam Rivera', initials: 'SR', role: 'Frontend Dev' },
+            { name: 'Jordan Lee', initials: 'JL', role: 'Backend Dev' }
+        ]
+    },
+    {
+        id: '2',
+        title: 'Blockchain Supply Chain Tracker',
+        description: 'Create a transparent supply chain management system using blockchain technology for product authenticity and tracking from origin to consumer.',
+        tags: ['Solidity', 'Web3.js', 'Vue.js', 'Smart Contracts', 'Hard'],
+        members: 2,
+        maxMembers: 4,
+        team: [
+            { name: 'Morgan Taylor', initials: 'MT', role: 'Blockchain Dev' },
+            { name: 'Casey Kim', initials: 'CK', role: 'UI/UX Designer' }
+        ]
+    },
+    {
+        id: '3',
+        title: 'Recipe Finder App',
+        description: 'A mobile-friendly React app that fetches recipes from a public API based on ingredients the user has at home. Features a "favorites" list.',
+        tags: ['React', 'API', 'JavaScript', 'CSS', 'Easy'],
+        members: 1,
+        maxMembers: 3,
+        team: [
+            { name: 'Chris Lee', initials: 'CL', role: 'Project Owner' }
+        ]
+    },
+    {
+        id: '4',
+        title: 'Mental Health Chatbot',
+        description: 'An empathetic AI chatbot providing mental health support and crisis intervention resources, built with NLP and a React Native frontend.',
+        tags: ['NLP', 'Python', 'React Native', 'Firebase', 'Medium'],
+        members: 4,
+        maxMembers: 6,
+        team: [
+            { name: 'Alex Chen', initials: 'AC', role: 'AI Specialist' },
+            { name: 'Sam Rivera', initials: 'SR', role: 'Mobile Dev' },
+            { name: 'Avery Brooks', initials: 'AB', role: 'Backend Dev' },
+            { name: 'Quinn Martinez', initials: 'QM', role: 'UX Researcher' }
+        ]
+    },
+    {
+        id: '5',
+        title: 'Community Event Board',
+        description: 'A simple CRUD application where users can post, view, and sign up for local volunteer events. Uses Firebase for backend.',
+        tags: ['React', 'Firebase', 'TailwindCSS', 'Easy'],
+        members: 1,
+        maxMembers: 4,
+        team: [
+            { name: 'Dana White', initials: 'DW', role: 'Project Owner' }
+        ]
+    },
+    {
+        id: '6',
+        title: 'Personal Portfolio Builder',
+        description: 'A tool that lets users fill out a simple form and generates a clean, professional, single-page portfolio website. Deploys to Netlify.',
+        tags: ['JavaScript', 'HTML', 'CSS', 'Netlify', 'Easy'],
+        members: 2,
+        maxMembers: 4,
+        team: [
+            { name: 'Pat Kim', initials: 'PK', role: 'Project Owner' },
+            { name: 'Jo Smith', initials: 'JS', role: 'Frontend Dev' }
+        ]
+    },
+    {
+        id: '7',
+        title: 'AR Navigation for Indoor Spaces',
+        description: 'Develop an augmented reality app for navigating complex indoor environments like malls and airports using ARCore and machine learning for precise location mapping.',
+        tags: ['Unity', 'ARCore', 'C#', 'Mobile Dev', 'Medium'],
+        members: 1,
+        maxMembers: 4,
+        team: [
+            { name: 'Riley Parker', initials: 'RP', role: 'AR Developer' }
+        ]
+    }
+];
+
+
+// --- SVG Icons ---
+const StarIcon = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+    </svg>
+);
+
+const UsersIcon = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+);
+
+const SearchIcon = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+);
+
+const ArrowLeftIcon = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+);
+
+const SparklesIcon = ({ className }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2.25a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75ZM5.636 5.636a.75.75 0 0 1 1.06 0l2.122 2.121a.75.75 0 1 1-1.06 1.06L5.636 6.697a.75.75 0 0 1 0-1.06Zm11.314 11.314a.75.75 0 0 1 1.06 0l2.121 2.121a.75.75 0 1 1-1.06 1.06l-2.121-2.12a.75.75 0 0 1 0-1.061Zm-11.314 0a.75.75 0 0 1 0 1.06l-2.121 2.121a.75.75 0 1 1-1.06-1.06l2.121-2.121a.75.75 0 0 1 1.06 0Zm13.435-12.374a.75.75 0 0 1 0 1.06l-2.121 2.121a.75.75 0 1 1-1.06-1.06l2.121-2.121a.75.75 0 0 1 1.06 0ZM3 12a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Zm15 0a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Z" />
+    </svg>
+);
+
+const LogOutIcon = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+    </svg>
+);
+
+
+// --- Components ---
+
+const LoginPage = ({ onLogin }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setError('');
+        if (!email || !password) {
+            setError('Please enter both email and password.');
+            return;
+        }
+        setIsSubmitting(true);
+        // Simulate API call
+        setTimeout(() => {
+            setIsSubmitting(false);
+            onLogin(email); // Pass email as username
+        }, 1000);
+    };
+
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen px-6">
+            <div className="text-center mb-12">
+                <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4">
+                    HACK<span className="text-amber-400">.BUILD</span>
+                </h1>
+                <p className="text-gray-300 text-lg max-w-2xl mx-auto">Find your team. Build the future.</p>
+            </div>
+
+            <div className="w-full max-w-md bg-gray-900/50 border border-gray-800 rounded-2xl p-8 backdrop-blur-sm">
+                <form onSubmit={handleSubmit}>
+                    <h2 className="text-3xl font-bold text-white text-center mb-6">Welcome Back</h2>
+                    <div className="mb-4">
+                        <label className="block text-gray-300 text-sm font-semibold mb-2" htmlFor="email">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                            placeholder="you@company.com"
+                        />
+                    </div>
+                    <div className="mb-6">
+                        <label className="block text-gray-300 text-sm font-semibold mb-2" htmlFor="password">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                            placeholder="••••••••"
+                        />
+                    </div>
+                    
+                    {error && (
+                        <p className="text-red-400 text-sm text-center mb-4">{error}</p>
+                    )}
+
+                    <div className="flex flex-col gap-4">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full bg-amber-600 text-white font-semibold py-3 rounded-lg hover:bg-amber-700 transition-all duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        >
+                            {isSubmitting ? 'Logging In...' : 'Login'}
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={handleSubmit} // Simulate signup as login for this demo
+                            className="w-full bg-gray-700 text-white font-semibold py-3 rounded-lg hover:bg-gray-600 transition-all duration-300"
+                        >
+                            Sign Up
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+
+const Header = ({ setPage, activePage, onLogout }) => {
+    const navItemClass = (pageName) => `px-4 py-2 rounded-lg transition-colors duration-300 ${activePage === pageName ? 'bg-amber-500/20 text-amber-400' : 'text-gray-300 hover:bg-gray-700'}`;
+
+    return (
+        <header className="fixed top-0 left-0 right-0 z-50 bg-gray-950/50 backdrop-blur-sm border-b border-gray-800">
+            <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
+                <div className="text-2xl font-bold text-white tracking-wider cursor-pointer" onClick={() => setPage('projects')}>
+                    HACK<span className="text-amber-400">.BUILD</span>
+                </div>
+                <div className="hidden md:flex items-center space-x-4">
+                    <button onClick={() => setPage('participants')} className={navItemClass('participants')}>
+                        <UsersIcon className="w-5 h-5 inline-block mr-2" />
+                        Participants
+                    </button>
+                    <button onClick={() => setPage('projects')} className={navItemClass('projects')}>
+                        <StarIcon className="w-5 h-5 inline-block mr-2" />
+                        Projects
+                    </button>
+                    <button 
+                        onClick={onLogout}
+                        className="flex items-center text-gray-400 hover:text-amber-400 transition-colors duration-300"
+                        title="Logout"
+                    >
+                        <LogOutIcon className="w-5 h-5 mr-2" />
+                        Logout
+                    </button>
+                </div>
+            </nav>
+        </header>
+    );
+};
+
+
+const ProjectCard = ({ project, onViewDetails }) => (
+    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 flex flex-col justify-between group hover:border-amber-500/50 transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+        <div>
+            <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold text-white group-hover:text-amber-400 transition-colors duration-300">{project.title}</h3>
+                <StarIcon className="w-6 h-6 text-gray-500 group-hover:text-yellow-400 transition-colors duration-300 cursor-pointer" />
+            </div>
+            <p className="text-gray-400 mb-4 text-sm leading-relaxed">{project.description}</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+                {project.tags.map(tag => (
+                    <span key={tag} className="bg-gray-800 text-gray-300 text-xs font-medium px-2.5 py-1 rounded-full">{tag}</span>
+                ))}
+            </div>
+        </div>
+        <div className="flex justify-between items-center mt-4">
+            <div className="text-gray-400 flex items-center">
+                <UsersIcon className="w-5 h-5 mr-2" />
+                <span>{project.members}/{project.maxMembers} members</span>
+            </div>
+            <button
+                onClick={() => onViewDetails(project.id)}
+                className="bg-gray-800 text-white px-5 py-2 rounded-lg hover:bg-amber-600 transition-all duration-300 font-semibold"
+            >
+                View Details
+            </button>
+        </div>
+    </div>
+);
+
+const AddProjectForm = ({ onAddProject }) => {
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [tags, setTags] = useState('');
+    const [maxMembers, setMaxMembers] = useState(4);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!title || !description || !tags || !maxMembers) {
+            alert("Please fill out all project fields."); // Simple validation
+            return;
+        }
+
+        const tagsArray = tags.split(',').map(s => s.trim()).filter(s => s);
+        
+        onAddProject({
+            title,
+            description,
+            tags: tagsArray,
+            maxMembers: parseInt(maxMembers, 10)
+        });
+        
+        // Reset form
+        setTitle('');
+        setDescription('');
+        setTags('');
+        setMaxMembers(4);
+    };
+
+    return (
+        <div className="w-full max-w-2xl mx-auto bg-gray-900/50 border border-gray-800 rounded-2xl p-8 backdrop-blur-sm mb-12">
+            <h2 className="text-3xl font-bold text-white text-center mb-6">Create a New Project</h2>
+            <form onSubmit={handleSubmit}>
+                <div className="mb-4">
+                    <label className="block text-gray-300 text-sm font-semibold mb-2" htmlFor="title">
+                        Project Title
+                    </label>
+                    <input
+                        type="text"
+                        id="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                        placeholder="e.g., AI-Powered Code Review"
+                    />
+                </div>
+                 <div className="mb-4">
+                    <label className="block text-gray-300 text-sm font-semibold mb-2" htmlFor="description">
+                        Description
+                    </label>
+                    <textarea
+                        id="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                        placeholder="What is your project about?"
+                        rows="3"
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label className="block text-gray-300 text-sm font-semibold mb-2" htmlFor="tags">
+                            Skills (comma-separated)
+                        </label>
+                        <input
+                            type="text"
+                            id="tags"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                            placeholder="e.g., React, Python"
+                        />
+                    </div>
+                     <div>
+                        <label className="block text-gray-300 text-sm font-semibold mb-2" htmlFor="maxMembers">
+                            Max Team Size
+                        </label>
+                        <input
+                            type="number"
+                            id="maxMembers"
+                            value={maxMembers}
+                            min="2"
+                            max="10"
+                            onChange={(e) => setMaxMembers(e.target.value)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                        />
+                    </div>
+                </div>
+                <button
+                    type="submit"
+                    className="w-full bg-amber-600 text-white font-semibold py-3 rounded-lg hover:bg-amber-700 transition-all duration-300"
+                >
+                    Add Project
+                </button>
+            </form>
+        </div>
+    );
+};
+
+
+const ProjectsPage = ({ projects, onViewDetails, onAddProject }) => {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredProjects = useMemo(() => {
+        const lowerSearch = searchTerm.toLowerCase();
+        if (!lowerSearch) {
+            return projects;
+        }
+        return projects.filter(project => {
+            const titleMatch = project.title.toLowerCase().includes(lowerSearch);
+            const descMatch = project.description.toLowerCase().includes(lowerSearch);
+            const tagsMatch = project.tags.some(tag => tag.toLowerCase().includes(lowerSearch));
+            return titleMatch || descMatch || tagsMatch;
+        });
+    }, [searchTerm, projects]);
+
+    const renderContent = () => {
+        if (filteredProjects.length === 0 && searchTerm) {
+            return (
+                <div className="text-center py-16">
+                    <p className="text-gray-400 text-xl">No projects found matching your search.</p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredProjects.map(project => (
+                    <ProjectCard key={project.id} project={project} onViewDetails={onViewDetails} />
+                ))}
+            </div>
+        );
+    };
+
+    return (
+        <div className="container mx-auto px-6 py-24 pt-32">
+            <div className="text-center mb-12">
+                <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4">FIND YOUR <span className="text-amber-400">DREAM TEAM</span></h1>
+                <p className="text-gray-300 text-lg max-w-2xl mx-auto">Browse innovative projects and join forces with talented hackers to build something amazing</p>
+            </div>
+            
+            <AddProjectForm onAddProject={onAddProject} />
+
+            <div className="relative max-w-2xl mx-auto mb-12">
+                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                    type="text"
+                    placeholder="Search projects or skills..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-800 rounded-lg py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                />
+            </div>
+
+            {renderContent()}
+        </div>
+    );
+};
+
+
+const ParticipantCard = ({ participant }) => (
+     <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 text-center group hover:border-amber-500/50 transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+         <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-600 to-orange-600 mx-auto flex items-center justify-center text-3xl font-bold text-white mb-4">
+             {participant.initials}
+         </div>
+         <h3 className="text-xl font-bold text-white mb-2">{participant.name}</h3>
+         <div className="flex flex-wrap justify-center gap-2">
+             {participant.skills.map(skill => (
+                 <span key={skill} className="bg-gray-800 text-gray-300 text-xs font-medium px-2.5 py-1 rounded-full">{skill}</span>
+             ))}
+         </div>
+     </div>
+);
+
+const AddParticipantForm = ({ onAddParticipant }) => {
+    const [name, setName] = useState('');
+    const [skills, setSkills] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!name || !skills) {
+            alert("Please fill out both name and skills."); // Using alert for simplicity, could be a modal
+            return;
+        }
+
+        const skillsArray = skills.split(',').map(s => s.trim()).filter(s => s);
+        const initials = name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || '??';
+        
+        onAddParticipant({
+            id: `p-${Date.now()}`, // Simple unique ID
+            name,
+            initials,
+            skills: skillsArray
+        });
+        
+        // Reset form
+        setName('');
+        setSkills('');
+    };
+
+    return (
+        <div className="w-full max-w-2xl mx-auto bg-gray-900/50 border border-gray-800 rounded-2xl p-8 backdrop-blur-sm mb-12">
+            <h2 className="text-3xl font-bold text-white text-center mb-6">Register as a Participant</h2>
+            <form onSubmit={handleSubmit}>
+                <div className="mb-4">
+                    <label className="block text-gray-300 text-sm font-semibold mb-2" htmlFor="name">
+                        Full Name
+                    </label>
+                    <input
+                        type="text"
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                        placeholder="e.g., Alex Chen"
+                    />
+                </div>
+                <div className="mb-6">
+                    <label className="block text-gray-300 text-sm font-semibold mb-2" htmlFor="skills">
+                        Skills (comma-separated)
+                    </label>
+                    <input
+                        type="text"
+                        id="skills"
+                        value={skills}
+                        onChange={(e) => setSkills(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                        placeholder="e.g., React, Node.js, Python"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    className="w-full bg-amber-600 text-white font-semibold py-3 rounded-lg hover:bg-amber-700 transition-all duration-300"
+                >
+                    Register
+                </button>
+            </form>
+        </div>
+    );
+};
+
+
+const ParticipantsPage = ({ participants, onAddParticipant }) => {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredParticipants = useMemo(() => {
+        const lowerSearch = searchTerm.toLowerCase();
+        if (!lowerSearch) {
+            return participants;
+        }
+        return participants.filter(participant => {
+            const nameMatch = participant.name.toLowerCase().includes(lowerSearch);
+            const skillsMatch = participant.skills.some(skill => skill.toLowerCase().includes(lowerSearch));
+            return nameMatch || skillsMatch;
+        });
+    }, [searchTerm, participants]);
+
+
+    const renderContent = () => {
+        if (participants.length === 0) {
+             return (
+                <div className="text-center py-16">
+                    <p className="text-gray-400 text-xl">No participants have registered yet.</p>
+                    <p className="text-gray-500 text-md">Be the first!</p>
+                </div>
+            );
+        }
+    
+        if (filteredParticipants.length === 0) {
+            return (
+                <div className="text-center py-16">
+                    <p className="text-gray-400 text-xl">No participants found matching your search.</p>
+                </div>
+            );
+        }
+
+        return (
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                {filteredParticipants.map(participant => (
+                    <ParticipantCard key={participant.id} participant={participant} />
+                ))}
+            </div>
+        );
+    };
+
+    return (
+        <div className="container mx-auto px-6 py-24 pt-32">
+            <div className="text-center mb-12">
+                <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4">MEET THE <span className="text-amber-400">HACKERS</span></h1>
+                <p className="text-gray-300 text-lg max-w-2xl mx-auto">Discover talented participants ready to collaborate on your project</p>
+            </div>
+            
+            <AddParticipantForm onAddParticipant={onAddParticipant} />
+
+            <div className="relative max-w-2xl mx-auto mb-12">
+                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                    type="text"
+                    placeholder="Search participants or skills..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-800 rounded-lg py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
+                />
+            </div>
+            {renderContent()}
+        </div>
+    );
+};
+
+const ProjectDetailsPage = ({ projectId, projects, onBack }) => {
+    const [project, setProject] = useState(null);
+    const [joinStatus, setJoinStatus] = useState(null);
+    const [projectPlan, setProjectPlan] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    // Load the project from mock data on mount
+    useEffect(() => {
+        const foundProject = projects.find(p => p.id === projectId);
+        if (foundProject) {
+            setProject(foundProject);
+        }
+        // If not found, project will remain null
+    }, [projectId, projects]);
+
+    const handleJoinRequest = () => {
+        setJoinStatus('sending');
+        setTimeout(() => {
+            setJoinStatus('sent');
+            setTimeout(() => setJoinStatus(null), 3000); // Reset after 3 seconds
+        }, 1000);
+    };
+
+    const handleGeneratePlan = async () => {
+        setIsGenerating(true);
+        setProjectPlan('');
+
+        const systemPrompt = `You are an expert project manager bot for a fast-paced hackathon. Your goal is to create a clear, concise, and actionable project plan.
+        The plan should include:
+        1.  **Key Milestones:** 3-4 major goals for the project.
+        2.  **Task Breakdown:** Under each milestone, list 2-4 specific tasks.
+        3.  **Tech Suggestions:** Briefly mention how the required skills could be applied to the tasks.
+        
+        Keep the language encouraging and direct. The output should be plain text, well-formatted with clear headings for milestones and bullet points for tasks.`;
+
+        const userQuery = `Generate a project plan for the following hackathon project:
+        - **Title:** ${project.title}
+        - **Description:** ${project.description}
+        - **Required Skills:** ${project.tags.join(', ')}`;
+
+        try {
+            const apiKey = ""; // API key is handled by the environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`API call failed with status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                setProjectPlan(candidate.content.parts[0].text);
+            } else {
+                console.error("No content found in API response:", result);
+                setProjectPlan("Sorry, I couldn't generate a plan. The response was empty.");
+            }
+        } catch (error) {
+            console.error("Error generating project plan:", error);
+            setProjectPlan("Sorry, an error occurred while generating the project plan. Please check the console for details.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    if (!project) {
+        // This handles both the initial loading state and the 'Not Found' case
+        return <NotFoundPage onBack={onBack} />;
+    }
+    
+    return (
+        <div className="container mx-auto px-6 py-24 pt-32">
+            <button onClick={onBack} className="flex items-center text-amber-400 hover:text-amber-300 mb-8 group">
+                <ArrowLeftIcon className="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" />
+                Back to Projects
+            </button>
+            
+            <div className="grid lg:grid-cols-3 gap-12">
+                <div className="lg:col-span-2">
+                    <div className="flex items-start justify-between mb-4">
+                        <h1 className="text-4xl font-bold text-white">{project.title}</h1>
+                        <StarIcon className="w-8 h-8 text-gray-500 hover:text-yellow-400 cursor-pointer flex-shrink-0 ml-4"/>
+                    </div>
+                    
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-semibold text-white mb-3">About this Project</h2>
+                        <p className="text-gray-300 leading-relaxed">{project.description}</p>
+                    </div>
+
+                    <div>
+                         <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-2xl font-semibold text-white">Required Skills</h2>
+                            <button
+                                onClick={handleGeneratePlan}
+                                disabled={isGenerating || !!projectPlan || !project}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-amber-300 bg-amber-900/50 rounded-lg border border-amber-800 hover:bg-amber-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <SparklesIcon className="w-4 h-4" />
+                                {isGenerating ? 'Generating...' : (projectPlan ? 'Plan Generated' : '✨ Generate Project Plan')}
+                            </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {project.tags.map(tag => (
+                                <span key={tag} className="bg-gray-800 text-gray-300 text-md font-medium px-4 py-2 rounded-lg">{tag}</span>
+                            ))}
+                        </div>
+                    </div>
+                     { (isGenerating || projectPlan) && (
+                        <div className="mt-8 p-6 bg-gray-900/50 border border-gray-800 rounded-2xl backdrop-blur-sm">
+                            <h2 className="text-2xl font-semibold text-white mb-3 flex items-center gap-2">
+                                <SparklesIcon className="w-6 h-6 text-amber-400" />
+                                AI-Generated Project Plan
+                            </h2>
+                            { isGenerating ? (
+                                <div className="space-y-4 animate-pulse">
+                                    <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+                                    <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+                                    <div className="h-4 bg-gray-700 rounded w-4/5"></div>
+                                </div>
+                            ) : (
+                                <div
+                                    className="prose prose-invert prose-sm max-w-none text-gray-300 whitespace-pre-wrap"
+                                    dangerouslySetInnerHTML={{ __html: projectPlan.replace(/\n/g, '<br />') }} // Simple formatting
+                                >
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 h-fit backdrop-blur-sm">
+                    <h2 className="text-2xl font-bold text-white mb-4 flex justify-between items-center">
+                        <span>Team Members</span>
+                        <span className="text-lg text-gray-400">{project.members}/{project.maxMembers}</span>
+                    </h2>
+                    
+                    <div className="space-y-4 mb-6">
+                        {project.team.map(member => (
+                            <div key={member.name} className="flex items-center">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 to-orange-600 flex items-center justify-center font-bold text-white mr-4">
+                                    {member.initials}
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-white">{member.name}</p>
+                                    <p className="text-gray-400 text-sm">{member.role}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={handleJoinRequest}
+                        disabled={joinStatus !== null}
+                        className="w-full bg-amber-600 text-white font-semibold py-3 rounded-lg hover:bg-amber-700 transition-all duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                    >
+                        {joinStatus === 'sending' && 'Sending...'}
+                        {joinStatus === 'sent' && 'Request Sent!'}
+                        {joinStatus === null && 'Request to Join Team'}
+                    </button>
+                     {joinStatus === 'sent' && (
+                        <p className="text-center text-sm text-green-400 mt-3 animate-pulse">
+                            You'll be notified when they respond.
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+const NotFoundPage = ({ onBack }) => (
+    <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
+        <h1 className="text-6xl font-extrabold text-white mb-4">Project Not Found</h1>
+        <p className="text-gray-400 mb-8 text-lg">Sorry, we couldn't find the project you were looking for.</p>
+        <button 
+            onClick={onBack}
+            className="bg-amber-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-amber-700 transition-transform transform hover:scale-105"
+        >
+            Back to Projects
+        </button>
+    </div>
+);
+
+
+// --- Main App Component ---
+export default function App() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [page, setPage] = useState('projects'); // Default page after login
+    const [projects, setProjects] = useState(initialProjects);
+    const [participants, setParticipants] = useState([]);
+    
+    // This state is to manage the project detail view
+    const [currentView, setCurrentView] = useState({ view: 'projects' }); 
+
+    const handleLogin = (username) => {
+        setIsLoggedIn(true);
+        setCurrentUser(username);
+        setPage('projects'); // Set default page to projects
+        setCurrentView({ view: 'projects' }); // Reset view
+    };
+
+    const handleLogout = () => {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+    };
+
+    const handleSetPage = (pageName) => {
+        setPage(pageName);
+        setCurrentView({ view: pageName }); // Set the main page view
+    };
+    
+    const handleViewDetails = (projectId) => {
+        setCurrentView({ view: 'projectDetail', projectId: projectId });
+    };
+    
+    const handleBackToProjects = () => {
+        setCurrentView({ view: 'projects' });
+        setPage('projects'); // Ensure main page state is also reset
+    };
+
+    const handleAddParticipant = (newParticipant) => {
+        setParticipants(prevParticipants => [...prevParticipants, newParticipant]);
+    };
+    
+    const handleAddProject = (projectData) => {
+        const initials = currentUser?.split('@')[0].substring(0, 2).toUpperCase() || '??';
+        
+        const newProject = {
+            ...projectData,
+            id: `proj-${Date.now()}`,
+            members: 1, // Starts with the creator
+            team: [
+                { 
+                    name: currentUser, // Using email as name for simplicity
+                    initials: initials, 
+                    role: 'Project Owner' 
+                }
+            ]
+        };
+        setProjects(prevProjects => [newProject, ...prevProjects]);
+    };
+
+    const renderContent = () => {
+        switch (currentView.view) {
+            case 'projects':
+                return <ProjectsPage projects={projects} onViewDetails={handleViewDetails} onAddProject={handleAddProject} />;
+            case 'projectDetail':
+                return <ProjectDetailsPage projectId={currentView.projectId} projects={projects} onBack={handleBackToProjects} />;
+            case 'participants':
+                return <ParticipantsPage participants={participants} onAddParticipant={handleAddParticipant} />;
+            default:
+                return <ProjectsPage projects={projects} onViewDetails={handleViewDetails} onAddProject={handleAddProject} />;
+        }
+    };
+
+    return (
+        <div className="bg-gray-950 min-h-screen text-gray-200 font-sans">
+            {/* Styles for animations */}
+            <style>{`
+                @keyframes blob {
+                    0% { transform: translate(0px, 0px) scale(1); }
+                    33% { transform: translate(30px, -50px) scale(1.1); }
+                    66% { transform: translate(-20px, 20px) scale(0.9); }
+                    100% { transform: translate(0px, 0px) scale(1); }
+                }
+                .animate-blob {
+                    animation: blob 7s infinite ease-in-out;
+                }
+                .animation-delay-2000 {
+                    animation-delay: 2s;
+                }
+                .animation-delay-4000 {
+                    animation-delay: 4s;
+                }
+                
+                /* Simple prose styles for the generated plan */
+                .prose strong { font-weight: 600; color: white; }
+                .prose ul { list-style-type: disc; padding-left: 1.5rem; }
+                .prose li { margin-top: 0.25rem; }
+            `}</style>
+
+             {/* Background Gradient Blobs */}
+            <div className="absolute top-0 left-0 w-96 h-96 bg-orange-900 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob"></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-amber-900 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-red-900 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+            
+            <div className="relative z-10">
+                {!isLoggedIn ? (
+                    <LoginPage onLogin={handleLogin} />
+                ) : (
+                    <>
+                        <Header setPage={handleSetPage} activePage={page} onLogout={handleLogout} />
+                        <main>
+                            {renderContent()}
+                        </main>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
